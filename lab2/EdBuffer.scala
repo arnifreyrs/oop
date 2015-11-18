@@ -241,11 +241,11 @@ class EdBuffer {
     }
 
     /** Change that records a deletion */
-    class Deletion(pos: Int, deleted: String) extends Change {
+    class Deletion(pos: Int, deleted: Char) extends Change {
         def undo() {
             insert(pos, deleted)
         }
-        def redo() { deleteRange(pos, deleted.length) }
+        def redo() { deleteChar(pos) }
     }
 
     def wrapChange(before: Memento, change: Change, after: Memento) = {

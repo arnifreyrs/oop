@@ -102,30 +102,30 @@ class Editor extends Undoable {
     /** Command: Delete in a specified direction */
     def deleteCommand(dir: Int): Change = {
         var p = ed.point
-        var s: String = ""
+        var s: Char = 0
         dir match {
             case Editor.LEFT =>
                 if (p == 0) { beep(); return null }
                 p -= 1
-                s = ed.charAt(p).toString
+                s = ed.charAt(p)
                 ed.deleteChar(p)
                 ed.point = p
             case Editor.RIGHT =>
                 if (p == ed.length) { beep(); return null }
-                s = ed.charAt(p).toString
+                s = ed.charAt(p)
                 ed.deleteChar(p)
             case Editor.END =>
                 val row = ed.getRow(p)
                 println(row, p, ed.charAt(p))
-                p = ed.getPos(row, ed.getLineLength(row)-2)
                 val endOfLine = ed.getPos(row, ed.getLineLength(row)-1)
                 if(ed.point != endOfLine){
-                    s = ed.charAt(p).toString
+                    p = ed.getPos(row, ed.getLineLength(row)-2)
+                    s = ed.charAt(p)
                     ed.deleteChar(p)
                 } else {
-                    val rangeOfNewLine = 1
-                    s = ed.getRange(endOfLine, rangeOfNewLine).toString
-                    ed.deleteRange(endOfLine, rangeOfNewLine)
+                    p = endOfLine
+                    s = ed.charAt(p)
+                    ed.deleteChar(p)
                 }
             case _ =>
                 throw new Error("Bad direction")
