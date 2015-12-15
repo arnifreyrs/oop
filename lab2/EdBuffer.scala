@@ -105,6 +105,8 @@ class EdBuffer {
 
     def writeFile(out: Writer) { text.writeFile(out) }
 
+    def findString(str: String, fromIndex: Int): Int = { text.indexOf(str, fromIndex) }
+
 
     // Mutator methods
 

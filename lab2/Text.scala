@@ -2,14 +2,14 @@
 // Copyright (c) 2015 J. M. Spivey
 
 /** A sequence of characters that allows (efficient) insertion and deletion
- * in the middle. */
+  * in the middle. */
 class Text(init: Int) extends CharSequence {
     /* A Text object represents the sequence of characters
      * buffer[0..gap) ++ buffer[max-len+gap..max) */
-    
+
     /** The gap buffer */
     private var buffer = new Array[Char](init)
-    
+
     /** Length of the represented text */
     private var len = 0
 
@@ -18,10 +18,10 @@ class Text(init: Int) extends CharSequence {
 
     /** Size of the buffer, defined for convenience */
     private def max = buffer.length
-    
+
     /** Construct a Text with a default initial capacity */
     def this() { this(1000) }
-    
+
     /** Construct a Text containing a single character */
     def this(ch: Char) { this(4); insert(0, ch) }
 
@@ -40,13 +40,29 @@ class Text(init: Int) extends CharSequence {
         else
             buffer(max-len+pos)
     }
-    
+
     // Mutators: any changes or additions here require similar changes to
     // the subclass PlaneText (the fragile base class problem).
-    
+
     /** Make the text empty. */
     def clear() {
         gap = 0; len = 0
+    }
+
+    def indexOf(str: String, fromIndex: Int): Int ={
+        var i = fromIndex
+        val strLength = str.length
+        while(true){
+            val index = i % len
+            if(str.equals(getString(index, strLength))){
+                return index
+            }
+            if (index == (fromIndex-1) % len){
+                return -1
+            }
+            i += 1
+        }
+        -1
     }
 
     /** Insert a single character. */
@@ -56,7 +72,7 @@ class Text(init: Int) extends CharSequence {
         buffer(gap) = ch
         gap += 1; len += 1
     }
-    
+
     /** Insert a string. */
     def insert(pos: Int, s: String) {
         assert(0 <= pos && pos <= len)
@@ -65,12 +81,12 @@ class Text(init: Int) extends CharSequence {
         s.getChars(0, n, buffer, pos)
         gap += n; len += n
     }
-    
+
     /** Insert another text. */
     def insert(pos: Int, t: Text) {
         insertRange(pos, t, 0, t.length)
     }
-    
+
     /** Insert an immutable text */
     def insert(pos: Int, t: Text.Immutable) {
         t.getChars(this, pos)
@@ -79,7 +95,7 @@ class Text(init: Int) extends CharSequence {
     /** Insert range [start..start+nchars) from another text */
     def insertRange(pos: Int, t: Text, start: Int, nchars: Int) {
         assert(pos >= 0 && pos <= len && nchars >= 0 && t != this)
-        
+
         makeRoom(nchars); moveGap(pos)
         t.getChars(start, nchars, buffer, pos)
         len += nchars; gap += nchars
@@ -88,7 +104,7 @@ class Text(init: Int) extends CharSequence {
     /** Insert the contents of a file. */
     def insertFile(pos: Int, in: java.io.Reader) {
         assert(0 <= pos && pos <= len)
-        
+
         var nread = 0
         makeRoom(4096); moveGap(pos)
         while ({ nread = in.read(buffer, gap, max-len); nread >= 0 }) {
@@ -108,10 +124,10 @@ class Text(init: Int) extends CharSequence {
         assert(0 <= pos && pos < len)
         moveGap(pos); len -= 1
     }
-    
+
     /** Delete the last character. */
     def deleteLast() { deleteChar(len-1) }
-        
+
     /** Delete a range of characters. */
     def deleteRange(start: Int, nchars: Int) {
         assert(start >= 0 && nchars >= 0 && start+nchars <= len)
@@ -126,10 +142,10 @@ class Text(init: Int) extends CharSequence {
         assert(start >= 0 && nchars >= 0 && start+nchars <= len)
 
         if (start+nchars <= gap)
-            // Entirely in the low part
+        // Entirely in the low part
             Array.copy(buffer, start, arr, pos, nchars)
         else if (start >= gap)
-            // Entirely in the high part
+        // Entirely in the high part
             Array.copy(buffer, max-len+start, arr, pos, nchars)
         else {
             val k = gap-start
@@ -141,7 +157,7 @@ class Text(init: Int) extends CharSequence {
     /** Fetch the range [start..start+nchars) as an immutable text */
     def getRange(start: Int, nchars: Int) =
         new Text.Immutable(getString(start, nchars))
-    
+
     /** Fetch a range into another text */
     def getRange(start: Int, nchars: Int, buf: Text) {
         buf.clear()
@@ -153,37 +169,37 @@ class Text(init: Int) extends CharSequence {
         if (gap < start+nchars) moveGap(start+nchars)
         new String(buffer, start, nchars)
     }
-    
+
     /** Return the contents of the text as a String.  Be careful when using
-     * this for debugging: it has the (benign) side-effect of moving the gap
-     * to the end. */
+      * this for debugging: it has the (benign) side-effect of moving the gap
+      * to the end. */
     override def toString() = getString(0, len)
-   
+
     /** Select a range [start..end).  Required for CharSequence but unused. */
     def subSequence(start: Int, end: Int): CharSequence = {
         if (start < 0 || end < start || len < end)
             throw new IndexOutOfBoundsException()
         return getString(start, end-start)
     }
-    
+
     /** Establish gap = pos by moving characters around */
     private def moveGap(pos: Int) {
         assert(0 <= pos && pos <= len)
 
         if (gap < pos)
-            // buffer[gap..pos) := buffer[max+gap-len..max+pos-len)
+        // buffer[gap..pos) := buffer[max+gap-len..max+pos-len)
             Array.copy(buffer, max-len+gap, buffer, gap, pos-gap)
         else if (gap > pos)
-            // buffer[max+pos-len..max+gap-len) := buffer[pos..gap)
+        // buffer[max+pos-len..max+gap-len) := buffer[pos..gap)
             Array.copy(buffer, pos, buffer, max-len+pos, gap-pos)
 
         gap = pos
     }
-    
+
     /** Ensure that there is space for n more characters. */
     private def makeRoom(n: Int) {
         assert(n >= 0)
-        
+
         if (max-len >= n) return
 
         val newmax = Math.max(2*max, len+n)
@@ -191,17 +207,17 @@ class Text(init: Int) extends CharSequence {
         if (gap > 0)
             Array.copy(buffer, 0, newbuf, 0, gap)
         if (gap < len)
-            Array.copy(buffer, max-len+gap, 
-                       newbuf, newmax-len+gap, len-gap)
+            Array.copy(buffer, max-len+gap,
+                newbuf, newmax-len+gap, len-gap)
         buffer = newbuf
     }
 }
 
 object Text {
-    class Immutable private[Text] (private val contents: String) 
-            extends CharSequence {
+    class Immutable private[Text] (private val contents: String)
+      extends CharSequence {
         // The implementation here is trivial: just a Java string.
-        
+
         def charAt(index: Int) = contents.charAt(index)
 
         def length = contents.length

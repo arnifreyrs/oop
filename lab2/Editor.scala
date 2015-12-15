@@ -115,22 +115,19 @@ class Editor extends Undoable {
                 s = ed.charAt(p)
                 ed.deleteChar(p)
             case Editor.END =>
+//              I did this wrong, this only deletes the last character, not the characters in this line up until the end
                 val row = ed.getRow(p)
-                println(row, p, ed.charAt(p))
                 val endOfLine = ed.getPos(row, ed.getLineLength(row)-1)
                 if(ed.point != endOfLine){
                     p = ed.getPos(row, ed.getLineLength(row)-2)
-                    s = ed.charAt(p)
-                    ed.deleteChar(p)
                 } else {
                     p = endOfLine
-                    s = ed.charAt(p)
-                    ed.deleteChar(p)
                 }
+                s = ed.charAt(p)
+                ed.deleteChar(p)
             case _ =>
                 throw new Error("Bad direction")
         }
-        println(s,p)
 
         ed.setModified()
         new ed.Deletion(p, s)
@@ -154,6 +151,19 @@ class Editor extends Undoable {
             ed.loadFile(name)
             ed.initDisplay()
             reset()
+        }
+    }
+    
+    def findString(): Unit = {
+        val stringToFind = MiniBuffer.readString(display, "Search for string", null)
+        if(stringToFind != null && stringToFind.length > 0) {
+            val nextOccurrenceIndex = ed.findString(stringToFind, ed.point)
+            if(nextOccurrenceIndex == ed.point || nextOccurrenceIndex == -1){
+                MiniBuffer.message(display, "Error, could not find: " + stringToFind)
+            } else {
+                ed.point = nextOccurrenceIndex
+            }
+
         }
     }
 
@@ -279,6 +289,7 @@ object Editor {
         Display.ctrl('P') -> (_.moveCommand(UP)),
         Display.ctrl('Q') -> (_.quit),
         Display.ctrl('R') -> (_.replaceFileCommand),
+        Display.ctrl('S') -> (_.findString),
         Display.ctrl('T') -> (_.transposeCommand),
         Display.ctrl('W') -> (_.saveFileCommand),
         Display.ctrl('Y') -> (_.redo),
